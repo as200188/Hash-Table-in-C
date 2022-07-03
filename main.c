@@ -21,13 +21,45 @@ int main(int argc, char* argv[])
 	
 	KeyValue* obj = (KeyValue*)malloc(sizeof(KeyValue));
 	if (obj) {
-		obj->key = 900;
+		obj->key = 1;
 		obj->val = 15621;
+        printf("Removed Key: %d\n", obj->key);
+        hash_table->remove(hash_table, obj);
+        
         printf("Key: %d", obj->key);
 		if (hash_table->find(hash_table, obj))
-			printf("%s", " find it.");
+			printf("%s", " find it.\n");
 		else
-			printf("%s", " Not found.");
+			printf("%s", " Not found.\n");
+			
+		obj->key = 101;
+		obj->val = 21;	
+		printf("Key: %d", obj->key);
+        
+		if (hash_table->find(hash_table, obj))
+			printf("%s", " find it.\n");
+		else
+			printf("%s", " Not found.\n");
+			
+		obj->key = 901;
+		obj->val = 21;	
+		printf("Key: %d", obj->key);
+        
+		if (hash_table->find(hash_table, obj))
+			printf("%s", " find it.\n");
+		else
+			printf("%s", " Not found.\n");
+			
+		obj->key = 1001;
+		obj->val = 21;	
+		printf("Key: %d", obj->key);
+        
+		if (hash_table->find(hash_table, obj))
+			printf("%s", " find it.\n");
+		else
+			printf("%s", " Not found.\n");
+			
+		
 	}
 	
 	// remove all table and release memory.
