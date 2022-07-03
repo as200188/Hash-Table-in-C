@@ -8,6 +8,7 @@ remove_all: remove the table and release all memory.
 */
 
 /* forward declaration */
+/* data structure define */ 
 typedef struct key_value_t KeyValue;
 typedef struct node_t Node;
 typedef struct object HashTable;
@@ -15,8 +16,9 @@ typedef struct object HashTable;
 typedef int cmp_f(KeyValue*, KeyValue*);
 typedef int hash_f(HashTable*, KeyValue*);
 typedef int insert_f(HashTable*, KeyValue*);
-typedef KeyValue* find_f(HashTable*, KeyValue *);
+typedef KeyValue* find_f(HashTable*, KeyValue*);
 typedef void remove_all_f(HashTable*);
+typedef void remove_f(HashTable*, KeyValue*);
 
 
 struct key_value_t {
@@ -37,9 +39,55 @@ struct object {
     insert_f *insert;
     find_f *find;
     remove_all_f *remove_all;
+    remove_f *remove;
 };
 
-static void remove_all_impl(HashTable* self) {
+static void remove_impl(HashTable* self, KeyValue *search_obj){
+    
+    // Get index of table.
+	int index = self->hash_func(self, search_obj);
+	
+    if (self->table[index].obj) {
+        Node *pre, *head, *cur, *next = NULL;
+        head = &(self->table[index]);
+        cur = head;
+        next = head->next;
+		// Compare keys.
+		// Head.
+		if (self->cmp(self->table[index].obj, search_obj) == 0) {
+			free(head->obj);
+			head->obj = next->obj;
+			head->next = next->next;
+			free(next);
+		}
+		else{
+		    // Not found, try to search linked list.
+    		// This entry may exist linked list.
+    		// Search this linked list.
+    		pre = cur;
+    		cur = next;
+    		next = cur->next;
+    		
+    		while (cur) {
+    			if (self->cmp(cur->obj, search_obj) == 0){
+    			    pre->next = cur->next;
+    			    free(cur->obj);
+    			    free(cur);
+    			    return;
+                }
+                
+    			pre = cur;
+        		cur = next;
+        		next = cur->next;
+    		}
+        }
+	}
+    
+    return;
+
+}
+
+static void remove_all_impl(HashTable *self) {
     // Remove all node and release memory space.
    int i;
    for (i = 0; i < self->TABLE_SIZE; i++) {
@@ -83,7 +131,7 @@ static KeyValue* find_impl(HashTable *self, KeyValue *search_obj) { // method
 		}
 	}
 
-	return NULL;
+	return NULL; // Can't find.
 }
 
 static int insert_impl(HashTable *self, KeyValue *new_obj) { // method
@@ -125,6 +173,10 @@ static int hash_func_impl(HashTable *self, KeyValue *obj) { // method
 
 static int cmp_impl(KeyValue *a, KeyValue *b) { // method
     // This method can be replaced by assigning new implementation of function.
+    if(!(a && b)){
+        return -1;
+    }
+    
     if (a->key == b->key)
 		return 0;
 	else if (a->key > b->key)
@@ -155,11 +207,12 @@ int init_hash_table(HashTable** self, int table_size) { // call-by-value
 	
 	// Assign implementation to function pointer.
 	(*self)->TABLE_SIZE = table_size;
-    (*self)->hash_func = hash_func_impl;
+        (*self)->hash_func = hash_func_impl;
 	(*self)->cmp = cmp_impl;
 	(*self)->insert = insert_impl;
 	(*self)->find = find_impl;
 	(*self)->remove_all = remove_all_impl;
+	(*self)->remove = remove_impl;
 	
     return 0;
 }
